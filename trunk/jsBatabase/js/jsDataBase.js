@@ -5,7 +5,7 @@
  * Objeto Devuelto por la funcion jDB.select(tableName), contiene las funciones para
  * armar una consulta a la base de datos
  *
- * @param tableName: nombre de la tabla
+ * @param tableName nombre de la tabla
  */
 function jDB(tableName) {
 	this.tableName = tableName;
@@ -38,7 +38,7 @@ function jDB(tableName) {
  * Devuelto por la funcion jDB.Row(index)
  * Representa una fila en una tabla de la base de datos
  *
- * @param row: la fila, _tableName es agregado para poder crear un objeto jDB.Row
+ * @param row la fila, _tableName es agregado para poder crear un objeto jDB.Row
  * a partir de cualquie row
  */
 jDB.Row = function(row) {
@@ -47,6 +47,20 @@ jDB.Row = function(row) {
 
 	for (key in row) {
 		this[key] = row[key];
+	}
+
+
+	var metadata = jDB.getTableMetadata(this._tableName);
+	var rel = metadata['rel'];
+	
+	if (rel != undefined) {
+		for (var key in rel) {
+			if (key == 'oneToMany') {
+				var refTable = rel[key];
+				this[refTable] = jDB.select(refTable)
+					.where(function(row) {return row['id_'+this._tableName] == this.id});
+			}
+		}
 	}
 
 	/** Guarda los cambios a la base de datos */
@@ -129,15 +143,38 @@ jDB.getTableMetadata = function(tableName, databaseName) {
 	return null;
 }
 
+/**
+ * Crea la informacion relacionada a la tabla en la base de datos
+ *
+ * @param tableName nombre de la tabla
+ * @param data informacion relacionada a la tabla: columnas, relaciones
+ *	Ej: data = {
+ *		cols: ['col1', 'col2', 'col3'],
+ *		rel: {oneToMany: 'otherTableName'}
+ *	}
+ * @param databaseName nombre de la base de datos en uso (opcional)
+ */
 jDB.createTable = function(tableName, data, databaseName) {
 	databaseName = jDB.checkDBparam(databaseName);
 	
-	if (jDB.tableExist(tableName)) throw 'Table already in DB';
+	if (jDB.tableExist(tableName)) throw 'Table "'+tableName+'" already in DB';
 	
 	var cols = data['cols'];
+	var metadata = {'tableName': tableName, 'nextID': 1};
 	cols.splice(0, 0, 'id');
-	
-	var metadata = {'tableName': tableName, 'cols': cols, 'nextID': 1};
+
+	if (data['rel'] != undefined) {
+		metadata['rel'] = data['rel'];
+
+		for (var key in data['rel']) {
+			// Si es manyToOne, crear columna extra para relacionar
+			if (key == 'manyToOne') {
+				cols.push('id_'+data['rel'][key]);
+			}
+		}
+	}
+
+	metadata['cols'] = cols;
 
 	jDB.databases[databaseName]['tablesMetadata'].push(metadata);
 	jDB.databases[databaseName]['tables'][tableName] = [];
@@ -155,7 +192,7 @@ jDB.insert = function(tableName, data, databaseName) {
 		if (metadata['cols'].indexOf(colName) != -1) {
 			rowData[colName] = data[colName];
 		}
-		else throw 'Unexpected column!!';
+		else throw 'Unexpected column: "'+colName+'"';
 	}
 
 	jDB.databases[databaseName]['tables'][tableName].push(rowData);
