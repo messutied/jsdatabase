@@ -8,15 +8,18 @@
 		<script type="text/javascript">
 		jDB.createDB('dbTest');
 		jDB.selDB = 'dbTest';
-		jDB.createTable('usuarios', {cols: ['nombre', 'apellido', 'telefono']});
+		jDB.createTable('usuarios', {cols: ['nombre', 'apellido'], rel: {oneToMany: 'telefonos'}});
+		jDB.createTable('telefonos', {cols: ['descr', 'numero'], rel: {manyToOne: 'usuarios'}});
 
-		jDB.insert('usuarios', {nombre: 'Pepe', apellido: 'Duran', telefono: 23123});
-		jDB.insert('usuarios', {nombre: 'Maria', apellido: 'Melgar', telefono: 233123});
+		jDB.insert('usuarios', {nombre: 'Pepe', apellido: 'Duran'});
+		
+		jDB.insert('telefonos', {descr: 'casa', numero: 213212, id_usuarios: 1});
+		jDB.insert('telefonos', {descr: 'trabajo', numero: 2112666, id_usuarios: 1});
 
-		var rows = jDB.select('usuarios').where(function(row) { if (row.nombre == 'Pepe') return true; });
+		var rows = jDB.select('usuarios').where(function(row) { return row.nombre == 'Pepe' });
 		var pepe = rows.Row(0);
-		pepe.apellido = "suarez";
-		pepe.Save();
+		//pepe.apellido = "suarez";
+		//pepe.Save();
 
 		</script>
 	</head>
