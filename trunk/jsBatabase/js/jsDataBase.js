@@ -72,11 +72,10 @@ jDB.dbNames = [];
 /**
  * Guarda la estructura de las bases de datos
  *
- * jDB.databases =
- * {
+ * jDB.databases = {
  *		nombreDB: {
- *		tablesMetadata: [{tableName: 'tableName', cols: [id, col1, col2], nextID: 1}]
- *		tables: {tableName: [id: 1, col1: 'blah', col2: 'blah']}
+ *			tablesMetadata: [{tableName: 'tableName', cols: [id, col1, col2], nextID: 1}]
+ *			tables: {tableName: [id: 1, col1: 'blah', col2: 'blah']}
  *		}
  *	}
  */
