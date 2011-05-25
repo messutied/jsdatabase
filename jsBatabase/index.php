@@ -13,7 +13,7 @@
 		jDB.insert('usuarios', {nombre: 'Pepe', apellido: 'Duran', telefono: 23123});
 		jDB.insert('usuarios', {nombre: 'Maria', apellido: 'Melgar', telefono: 233123});
 
-		jDB.select('usuarios').where(function(row) { if (row.nombre == 'pepe') return true; });
+		jDB.select('usuarios').where(function(row) { if (row.nombre == 'Pepe') return true; });
 
 		</script>
 	</head>
