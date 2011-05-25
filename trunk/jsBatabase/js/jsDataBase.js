@@ -1,14 +1,25 @@
-function jDB() {
-	this.tableName = null;
+function jDB(tableName) {
+	this.tableName = tableName;
 	this.selRow = {};
+	this.table = jDB.databases[jDB.selDB]['tables'][this.tableName];
 
-	this.where = function(query) {
+	this.where = function(queryFunct) {
+		var returnRows = [];
+		for (var i=0; i<this.table.length; i++) {
+			if (queryFunct(this.table[i])) {
+				returnRows.push(this.table[i]);
+			}
+		}
+
+		return returnRows;
+	}
+
+	this.where1 = function(query) {
 		var qArr = query.split(' and ');
 		var returnRows = [];
-		var table = jDB.databases[jDB.selDB]['tables'][this.tableName];
 
-		for (var i=0; i<table.length; i++) {
-			var row = table[i];
+		for (var i=0; i<this.table.length; i++) {
+			var row = this.table[i];
 			var valueOK = true;
 
 			for (var j=0; j<qArr.length; j++) {
@@ -129,7 +140,6 @@ jDB.insert = function(tableName, data, databaseName) {
 }
 
 jDB.select = function(tableName) {
-	var o = new jDB();
-	o.tableName = tableName;
+	var o = new jDB(tableName);
 	return o;
 }
