@@ -2,8 +2,37 @@ function jDB() {
 	this.tableName = null;
 	this.selRow = {};
 
-	this.where = function() {
+	this.where = function(query) {
+		var qArr = query.split(' and ');
+		var returnRows = [];
+		var table = jDB.databases[jDB.selDB]['tables'][this.tableName];
+
+		for (var i=0; i<table.length; i++) {
+			var row = table[i];
+			var valueOK = true;
+
+			for (var j=0; j<qArr.length; j++) {
+				var subQuery = qArr[j];
+				
+				if (subQuery.indexOf(' == ') > -1) {
+					var subQueryArr = subQuery.split(' == ');
+					var colName			= subQueryArr[0];
+					var valToCompare	= subQueryArr[1];
+
+					if (row[colName] != valToCompare){
+						valueOK = false;
+						break;
+					}
+				}
+			}
+
+			if (valueOK) {
+				returnRows.push(row);
+			}
+		}
 		
+		this.selRow = returnRows;
+		return returnRows;
 	}
 
 	this.set = function(key, val) {
@@ -100,5 +129,7 @@ jDB.insert = function(tableName, data, databaseName) {
 }
 
 jDB.select = function(tableName) {
-	
+	var o = new jDB();
+	o.tableName = tableName;
+	return o;
 }
