@@ -1,57 +1,52 @@
 function jDB(tableName) {
 	this.tableName = tableName;
-	this.selRow = {};
-	this.table = jDB.databases[jDB.selDB]['tables'][this.tableName];
+	this.rows = {};
+	this.table = null;
 
 	this.where = function(queryFunct) {
+		this.table = jDB.databases[jDB.selDB]['tables'][this.tableName];
 		var returnRows = [];
 		for (var i=0; i<this.table.length; i++) {
 			if (queryFunct(this.table[i])) {
-				returnRows.push(this.table[i]);
+				var temp = this.table[i];
+				temp._tableName = this.tableName;
+				returnRows.push(temp);
 			}
 		}
-
-		return returnRows;
+		var obj = new jDB(this.tableName);
+		obj.rows = returnRows;
+		return obj;
 	}
 
-	this.where1 = function(query) {
-		var qArr = query.split(' and ');
-		var returnRows = [];
+	this.Row = function(index) {
+		return new jDB.Row( this.rows[index] );
+	}
+}
 
-		for (var i=0; i<this.table.length; i++) {
-			var row = this.table[i];
-			var valueOK = true;
+jDB.Row = function(row) {
+	return new jDB.RowObj(row, row._tableName);
+}
 
-			for (var j=0; j<qArr.length; j++) {
-				var subQuery = qArr[j];
-				
-				if (subQuery.indexOf(' == ') > -1) {
-					var subQueryArr = subQuery.split(' == ');
-					var colName			= subQueryArr[0];
-					var valToCompare	= subQueryArr[1];
+jDB.RowObj = function(row) {
+	this._tableName = row._tableName;
+	this._table = null;
 
-					if (row[colName] != valToCompare){
-						valueOK = false;
-						break;
-					}
+	for (key in row) {
+		this[key] = row[key];
+	}
+
+	this.Save = function() {
+		this._table = jDB.databases[jDB.selDB]['tables'][this._tableName];
+		var metadata = jDB.getTableMetadata(this._tableName);
+		for (var i=0; i<this._table.length; i++) {
+			if (this._table[i]['id'] == this.id) {
+				for (var j=0; j<metadata['cols'].length; j++) {
+					var key = metadata['cols'][j];
+					this._table[i][key] = this[key];
 				}
-			}
-
-			if (valueOK) {
-				returnRows.push(row);
+				break;
 			}
 		}
-		
-		this.selRow = returnRows;
-		return returnRows;
-	}
-
-	this.set = function(key, val) {
-
-	}
-
-	this.save = function() {
-		
 	}
 }
 
