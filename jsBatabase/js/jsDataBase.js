@@ -107,42 +107,6 @@ jDB.createDB = function(dbName) {
 	return false;
 }
 
-jDB.checkDBparam = function(db) {
-	if (db == null) {
-		if (jDB.selDB == null) throw 'No databse selected';
-		else
-			db = jDB.selDB;
-	}
-	else jDB.selDB = db;
-
-	if (jDB.dbNames.indexOf(db) == -1) {
-		jDB.createDB(db);
-	}
-
-	return db;
-}
-
-jDB.tableExist = function(table) {
-	var exist = false;
-	for (var key in jDB.databases[jDB.selDB]['tables']) {
-		if (key == table) {
-			exist = true;
-		}
-	}
-	return exist;
-}
-
-jDB.getTableMetadata = function(tableName, databaseName) {
-	databaseName = jDB.checkDBparam(databaseName);
-
-	var metadatas = jDB.databases[databaseName]['tablesMetadata'];
-	for(var i=0; i< metadatas.length; i++) {
-		if (metadatas[i]['tableName'] == tableName)
-			return metadatas[i];
-	}
-	return null;
-}
-
 /**
  * Crea la informacion relacionada a la tabla en la base de datos
  *
@@ -203,4 +167,44 @@ jDB.insert = function(tableName, data, databaseName) {
 jDB.select = function(tableName) {
 	var o = new jDB(tableName);
 	return o;
+}
+
+
+
+/*****************	Extra functions	*******************************************/
+
+jDB.checkDBparam = function(db) {
+	if (db == null) {
+		if (jDB.selDB == null) throw 'No databse selected';
+		else
+			db = jDB.selDB;
+	}
+	else jDB.selDB = db;
+
+	if (jDB.dbNames.indexOf(db) == -1) {
+		jDB.createDB(db);
+	}
+
+	return db;
+}
+
+jDB.tableExist = function(table) {
+	var exist = false;
+	for (var key in jDB.databases[jDB.selDB]['tables']) {
+		if (key == table) {
+			exist = true;
+		}
+	}
+	return exist;
+}
+
+jDB.getTableMetadata = function(tableName, databaseName) {
+	databaseName = jDB.checkDBparam(databaseName);
+
+	var metadatas = jDB.databases[databaseName]['tablesMetadata'];
+	for(var i=0; i< metadatas.length; i++) {
+		if (metadatas[i]['tableName'] == tableName)
+			return metadatas[i];
+	}
+	return null;
 }
