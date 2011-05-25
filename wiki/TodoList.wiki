@@ -2,6 +2,7 @@
 
 = Todo List =
 
-  # Relaciones entre tablas
+  # Relaciones entre tablas _(40%)_
+  # Comentar codigo _(60%)_
+  # Devolver objeto al insertar a la DB
   # Guardar DB en local Storage
-  # Comentar codigo _(50%)_
