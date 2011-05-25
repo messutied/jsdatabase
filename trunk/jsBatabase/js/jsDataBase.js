@@ -1,3 +1,12 @@
+/**
+ * @class jDB:
+ * Clase estatica usada para las funciones de jsDatabase
+ *
+ * Objeto Devuelto por la funcion jDB.select(tableName), contiene las funciones para
+ * armar una consulta a la base de datos
+ *
+ * @param tableName: nombre de la tabla
+ */
 function jDB(tableName) {
 	this.tableName = tableName;
 	this.rows = {};
@@ -23,11 +32,16 @@ function jDB(tableName) {
 	}
 }
 
+/**
+ * @class jDB.Row:
+ *
+ * Devuelto por la funcion jDB.Row(index)
+ * Representa una fila en una tabla de la base de datos
+ *
+ * @param row: la fila, _tableName es agregado para poder crear un objeto jDB.Row
+ * a partir de cualquie row
+ */
 jDB.Row = function(row) {
-	return new jDB.RowObj(row, row._tableName);
-}
-
-jDB.RowObj = function(row) {
 	this._tableName = row._tableName;
 	this._table = null;
 
@@ -35,9 +49,11 @@ jDB.RowObj = function(row) {
 		this[key] = row[key];
 	}
 
+	/** Guarda los cambios a la base de datos */
 	this.Save = function() {
 		this._table = jDB.databases[jDB.selDB]['tables'][this._tableName];
 		var metadata = jDB.getTableMetadata(this._tableName);
+		
 		for (var i=0; i<this._table.length; i++) {
 			if (this._table[i]['id'] == this.id) {
 				for (var j=0; j<metadata['cols'].length; j++) {
@@ -50,9 +66,23 @@ jDB.RowObj = function(row) {
 	}
 }
 
+/** Lista con los nombres de las bases de datos */
 jDB.dbNames = [];
+
+/**
+ * Guarda la estructura de las bases de datos
+ *
+ * jDB.databases =
+ * {
+ *		nombreDB: {
+ *		tablesMetadata: [{tableName: 'tableName', cols: [id, col1, col2], nextID: 1}]
+ *		tables: {tableName: [id: 1, col1: 'blah', col2: 'blah']}
+ *		}
+ *	}
+ */
 jDB.databases = {};
 
+/** Base de datos en uso */
 jDB.selDB = null;
 
 jDB.createDB = function(dbName) {
