@@ -9,26 +9,43 @@
  */
 function jDB(tableName) {
 	this.tableName = tableName;
-	this.rows = {};
+	this.rows = [];
 	this.table = null;
 
-	this.where = function(queryFunct) {
+	this.where = function(queryFunct, queryJoinFuncts) {
 		this.table = jDB.databases[jDB.selDB]['tables'][this.tableName];
 		var returnRows = [];
+
 		for (var i=0; i<this.table.length; i++) {
-			if (queryFunct(this.table[i])) {
-				var temp = this.table[i];
-				temp._tableName = this.tableName;
-				returnRows.push(temp);
+			var row = new jDB.Row(this.table[i], this.tableName);
+
+			var rowOK = true;
+			
+			if (queryFunct(row)) {
+				if (queryJoinFuncts != undefined) {
+					var newSubRows = [];
+					for (var key in queryJoinFuncts) {
+//						alert(key);
+//						alert(row[key]['rows'][0].descr);
+						for (var j=0; j<row[key]['rows'].length; j++) {
+							if (queryJoinFuncts[key](row[key]['rows'][j])) {
+								newSubRows.push(row[key]['rows'][j]);
+							}
+						}
+						row[key]['rows'] = newSubRows;
+					}
+				}
+			}
+			else rowOK = false;
+			
+			if (rowOK) {
+				this.rows.push(row);
 			}
 		}
-		var obj = new jDB(this.tableName);
-		obj.rows = returnRows;
-		return obj;
-	}
 
-	this.Row = function(index) {
-		return new jDB.Row( this.rows[index] );
+		var obj = new jDB(this.tableName);
+		obj.rows = this.rows;
+		return obj;
 	}
 }
 
@@ -40,9 +57,13 @@ function jDB(tableName) {
  *
  * @param row la fila, _tableName es agregado para poder crear un objeto jDB.Row
  * a partir de cualquie row
+ * @param tableName nombre de la tabla (opcional)
  */
-jDB.Row = function(row) {
-	this._tableName = row._tableName;
+jDB.Row = function(row, tableName) {
+	if (tableName == null)
+		this._tableName = row._tableName;
+	else this._tableName = tableName;
+	
 	this._table = null;
 
 	for (key in row) {
