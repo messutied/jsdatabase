@@ -4,3 +4,4 @@
 
   # Relaciones entre tablas
   # Guardar DB en local Storage
+  # Comentar codigo _(50%)_
