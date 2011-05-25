@@ -2,5 +2,5 @@
 
 = Todo List =
 
-# Relaciones entre tablas
-# Guardar DB en local Storage
+  # Relaciones entre tablas
+  # Guardar DB en local Storage
