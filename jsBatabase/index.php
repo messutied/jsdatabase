@@ -11,7 +11,9 @@
 		jDB.createTable('usuarios', {cols: ['nombre', 'apellido'], rel: {oneToMany: 'telefonos'}});
 		jDB.createTable('telefonos', {cols: ['descr', 'numero'], rel: {manyToOne: 'usuarios'}});
 
-		jDB.insert('usuarios', {nombre: 'Pepe', apellido: 'Duran'});
+		var pepe = jDB.insert('usuarios', {nombre: 'Pepe', apellido: 'Duran'});
+		alert("Pepe inserted: "+pepe.nombre);
+		
 		jDB.insert('usuarios', {nombre: 'Juan', apellido: 'Duran'});
 		
 		jDB.insert('telefonos', {descr: 'casa', numero: 213212, id_usuarios: 2});

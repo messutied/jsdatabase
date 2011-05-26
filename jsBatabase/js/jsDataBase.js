@@ -186,6 +186,15 @@ jDB.createTable = function(tableName, data, databaseName) {
 	return true;
 }
 
+/**
+ * Inserta un record en la base de datos
+ *
+ * @param tableName El nombre de la tabla
+ * @param data Los valores a ser insertados en formato {colName1: 'data', colName2: 'moreData'}
+ * @param databaseName El nombre de la base de daros (opcional)
+ *
+ * @return jDB.Row con el objeto insertado
+ */
 jDB.insert = function(tableName, data, databaseName) {
 	databaseName = jDB.checkDBparam(databaseName);
 	
@@ -203,6 +212,8 @@ jDB.insert = function(tableName, data, databaseName) {
 	jDB.databases[databaseName]['tables'][tableName].push(rowData);
 	
 	metadata['nextID']++;
+
+	return new jDB.Row(rowData, tableName);
 }
 
 
