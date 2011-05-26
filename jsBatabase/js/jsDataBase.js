@@ -32,7 +32,7 @@ function jDB(tableName) {
 
 			var rowOK = true;
 			
-			if ((typeof queryFunct == 'function' && queryFunct(row)) || all) {
+			if (all || queryFunct(row)) {
 				if (queryJoinFuncts != undefined) {
 					var newSubRows = [];
 					
@@ -99,7 +99,8 @@ jDB.Row = function(row, tableName) {
 				var refTable = rel[key];
 				var $this = this;
 				this[refTable] = jDB.select(refTable)
-					.where(function(row) {return row['id_'+$this._tableName] == $this.id});
+					.where(function(row)
+					{return row['id_'+$this._tableName] == $this.id});
 			}
 		}
 	}
@@ -220,6 +221,32 @@ jDB.insert = function(tableName, data, databaseName) {
 
 /*****************	Extra functions	*******************************************/
 
+jDB.storeDB = function(databaseName) {
+	if (!supports_web_storage()) {
+		alert("Tu navegador no soporta Web Storage!");
+		return false;
+	}
+
+	databaseName = jDB.checkDBparam(databaseName);
+	var stringDB = JSON.stringify(jDB.databases[databaseName]);
+	localStorage.setItem("jDB_"+databaseName, stringDB);
+
+	return true;
+}
+
+jDB.loadDB = function(databaseName) {
+	if (!supports_web_storage()) {
+		alert("Tu navegador no soporta Web Storage!");
+		return false;
+	}
+
+	databaseName = jDB.checkDBparam(databaseName);
+	var loadedDB = JSON.parse( localStorage.getItem("jDB_"+databaseName) );
+	jDB.databases[databaseName] = loadedDB;
+
+	return true;
+}
+
 jDB.checkDBparam = function(db) {
 	if (db == null) {
 		if (jDB.selDB == null) throw 'No databse selected';
@@ -254,4 +281,12 @@ jDB.getTableMetadata = function(tableName, databaseName) {
 			return metadatas[i];
 	}
 	return null;
+}
+
+function supports_web_storage() {
+	try {
+		return 'localStorage' in window && window['localStorage'] !== null;
+	} catch (e) {
+		return false;
+	}
 }

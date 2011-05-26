@@ -4,6 +4,7 @@
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 		<title>Test jsDatabase</title>
 		<script type="text/javascript" src="js/jsDataBase.js"></script>
+		<script type="text/javascript" src="js/json2.js"></script>
 
 		<script type="text/javascript">
 		jDB.createDB('dbTest');
@@ -23,6 +24,8 @@
 		var pepe = rows.getRow(0);
 		//pepe.apellido = "suarez";
 		//pepe.Save();
+
+		jDB.storeDB();
 
 		</script>
 	</head>
