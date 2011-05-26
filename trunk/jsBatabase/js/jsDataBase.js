@@ -8,45 +8,60 @@
  * @param tableName nombre de la tabla
  */
 function jDB(tableName) {
-	this.tableName = tableName;
-	this.rows = [];
-	this.table = null;
+	this._tableName = tableName;
+	this._rows = null;
+
+	this.getRows = function() {return this._rows};
+	this.getRow = function(index) {return this._rows[index]};
+
+	this.withID = function(_id) {
+		return this.where(function(row) {return row.id==_id});
+	}
+
+	this.all = function() {
+		return this.where('all');
+	}
 
 	this.where = function(queryFunct, queryJoinFuncts) {
-		this.table = jDB.databases[jDB.selDB]['tables'][this.tableName];
-		var returnRows = [];
+		this._rows = jDB.databases[jDB.selDB]['tables'][this._tableName];
+		var all = (typeof queryFunct == 'string' && queryFunct == 'all');
+		var newRows = [];
 
-		for (var i=0; i<this.table.length; i++) {
-			var row = new jDB.Row(this.table[i], this.tableName);
+		for (var i=0; i<this._rows.length; i++) {
+			var row = new jDB.Row(this._rows[i], this._tableName);
 
 			var rowOK = true;
 			
-			if (queryFunct(row)) {
+			if ((typeof queryFunct == 'function' && queryFunct(row)) || all) {
 				if (queryJoinFuncts != undefined) {
 					var newSubRows = [];
+					
 					for (var key in queryJoinFuncts) {
-//						alert(key);
-//						alert(row[key]['rows'][0].descr);
-						for (var j=0; j<row[key]['rows'].length; j++) {
-							if (queryJoinFuncts[key](row[key]['rows'][j])) {
-								newSubRows.push(row[key]['rows'][j]);
+						var subRows = row[key]['_rows'];
+						for (var j=0; j<subRows.length; j++) {
+							if (queryJoinFuncts[key](subRows[j])) {
+								newSubRows.push(subRows[j]);
 							}
 						}
-						row[key]['rows'] = newSubRows;
+						row[key]['_rows'] = newSubRows;
 					}
 				}
 			}
 			else rowOK = false;
 			
 			if (rowOK) {
-				this.rows.push(row);
+				newRows.push(row);
 			}
 		}
 
-		var obj = new jDB(this.tableName);
-		obj.rows = this.rows;
-		return obj;
+		this._rows = newRows;
+		return this;
 	}
+}
+
+jDB.select = function(tableName) {
+	var o = new jDB(tableName);
+	return o;
 }
 
 /**
@@ -60,26 +75,31 @@ function jDB(tableName) {
  * @param tableName nombre de la tabla (opcional)
  */
 jDB.Row = function(row, tableName) {
-	if (tableName == null)
-		this._tableName = row._tableName;
+	if (tableName == null) this._tableName = row._tableName;
 	else this._tableName = tableName;
 	
 	this._table = null;
 
+	// Copiamos los valores
 	for (key in row) {
 		this[key] = row[key];
 	}
 
-
+	// info de esta tabla
 	var metadata = jDB.getTableMetadata(this._tableName);
+
+	// relaciones
 	var rel = metadata['rel'];
 	
 	if (rel != undefined) {
 		for (var key in rel) {
+
+			// si tiene relacion oneToMany se crean los "hijos" de este record
 			if (key == 'oneToMany') {
 				var refTable = rel[key];
+				var $this = this;
 				this[refTable] = jDB.select(refTable)
-					.where(function(row) {return row['id_'+this._tableName] == this.id});
+					.where(function(row) {return row['id_'+$this._tableName] == $this.id});
 			}
 		}
 	}
@@ -183,11 +203,6 @@ jDB.insert = function(tableName, data, databaseName) {
 	jDB.databases[databaseName]['tables'][tableName].push(rowData);
 	
 	metadata['nextID']++;
-}
-
-jDB.select = function(tableName) {
-	var o = new jDB(tableName);
-	return o;
 }
 
 
