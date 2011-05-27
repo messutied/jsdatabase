@@ -15,7 +15,7 @@ function jDB(tableName) {
 	this.getRow = function(index) {return this._rows[index]};
 
 	this.withID = function(_id) {
-		return this.where(function(row) {return row.id==_id});
+		return this.where(function(row) {return row.id==_id}).getRow(0);
 	}
 
 	this.all = function() {
@@ -23,19 +23,22 @@ function jDB(tableName) {
 	}
 
 	this.where = function(queryFunct, queryJoinFuncts) {
-		this._rows = jDB.databases[jDB.selDB]['tables'][this._tableName];
+		if (jDB.databases[jDB.selDB]['tables'][this._tableName] == null)
+			throw "Undefined DB "+this._tableName;
+
+		if (this._rows == null) this._rows = jDB.databases[jDB.selDB]['tables'][this._tableName];
 		var all = (typeof queryFunct == 'string' && queryFunct == 'all');
 		var newRows = [];
 
 		for (var i=0; i<this._rows.length; i++) {
-			var row = new jDB.Row(this._rows[i], this._tableName);
+			var row = jDB.Row(this._rows[i], this._tableName);
 
 			var rowOK = true;
-			
+
 			if (all || queryFunct(row)) {
 				if (queryJoinFuncts != undefined) {
 					var newSubRows = [];
-					
+
 					for (var key in queryJoinFuncts) {
 						var subRows = row[key]['_rows'];
 						for (var j=0; j<subRows.length; j++) {
@@ -48,7 +51,7 @@ function jDB(tableName) {
 				}
 			}
 			else rowOK = false;
-			
+
 			if (rowOK) {
 				newRows.push(row);
 			}
@@ -75,51 +78,54 @@ jDB.select = function(tableName) {
  * @param tableName nombre de la tabla (opcional)
  */
 jDB.Row = function(row, tableName) {
-	if (tableName == null) this._tableName = row._tableName;
-	else this._tableName = tableName;
-	
-	this._table = null;
+	if (tableName != null) row._tableName = tableName;
+//	else row._tableName = tableName;
+
+//	row._table = null;
 
 	// Copiamos los valores
-	for (key in row) {
-		this[key] = row[key];
-	}
+//	for (key in row) {
+//		this[key] = row[key];
+//	}
 
 	// info de esta tabla
-	var metadata = jDB.getTableMetadata(this._tableName);
+	var metadata = jDB.getTableMetadata(row._tableName);
 
 	// relaciones
 	var rel = metadata['rel'];
-	
+
 	if (rel != undefined) {
 		for (var key in rel) {
-
-			// si tiene relacion oneToMany se crean los "hijos" de este record
-			if (key == 'oneToMany') {
-				var refTable = rel[key];
-				var $this = this;
-				this[refTable] = jDB.select(refTable)
-					.where(function(row)
-					{return row['id_'+$this._tableName] == $this.id});
+			for (var i=0; i<rel[key].length; i++) {
+				// si tiene relacion oneToMany se crean los "hijos" de este record
+				if (key == 'oneToMany') {
+					var refTable = rel[key][i];
+					var $this = row;
+					row[refTable] = jDB.select(refTable)
+						.where(function(row)
+						{return row['id_'+$this._tableName] == $this.id});
+				}
 			}
 		}
 	}
 
 	/** Guarda los cambios a la base de datos */
-	this.Save = function() {
-		this._table = jDB.databases[jDB.selDB]['tables'][this._tableName];
+	row.Save = function() {
+		var table = jDB.databases[jDB.selDB]['tables'][this._tableName];
 		var metadata = jDB.getTableMetadata(this._tableName);
-		
-		for (var i=0; i<this._table.length; i++) {
-			if (this._table[i]['id'] == this.id) {
+
+		for (var i=0; i<table.length; i++) {
+			if (table[i]['id'] == this.id) {
 				for (var j=0; j<metadata['cols'].length; j++) {
 					var key = metadata['cols'][j];
-					this._table[i][key] = this[key];
+					table[i][key] = this[key];
 				}
 				break;
 			}
 		}
 	}
+
+	return row;
 }
 
 /** Lista con los nombres de las bases de datos */
@@ -162,9 +168,9 @@ jDB.createDB = function(dbName) {
  */
 jDB.createTable = function(tableName, data, databaseName) {
 	databaseName = jDB.checkDBparam(databaseName);
-	
+
 	if (jDB.tableExist(tableName)) throw 'Table "'+tableName+'" already in DB';
-	
+
 	var cols = data['cols'];
 	var metadata = {'tableName': tableName, 'nextID': 1};
 	cols.splice(0, 0, 'id');
@@ -173,9 +179,11 @@ jDB.createTable = function(tableName, data, databaseName) {
 		metadata['rel'] = data['rel'];
 
 		for (var key in data['rel']) {
-			// Si es manyToOne, crear columna extra para relacionar
-			if (key == 'manyToOne') {
-				cols.push('id_'+data['rel'][key]);
+			for (var i=0; i<data['rel'][key].length; i++) {
+				// Si es manyToOne, crear columna extra para relacionar
+				if (key == 'manyToOne') {
+					cols.push('id_'+data['rel'][key][i]);
+				}
 			}
 		}
 	}
@@ -198,11 +206,11 @@ jDB.createTable = function(tableName, data, databaseName) {
  */
 jDB.insert = function(tableName, data, databaseName) {
 	databaseName = jDB.checkDBparam(databaseName);
-	
+
 	var metadata = jDB.getTableMetadata(tableName, databaseName);
 	var id = metadata['nextID'];
 	var rowData = {'id': id};
-	
+
 	for (var colName in data) {
 		if (metadata['cols'].indexOf(colName) != -1) {
 			rowData[colName] = data[colName];
@@ -211,10 +219,10 @@ jDB.insert = function(tableName, data, databaseName) {
 	}
 
 	jDB.databases[databaseName]['tables'][tableName].push(rowData);
-	
+
 	metadata['nextID']++;
 
-	return new jDB.Row(rowData, tableName);
+	return jDB.Row(rowData, tableName);
 }
 
 
@@ -245,6 +253,17 @@ jDB.loadDB = function(databaseName) {
 	jDB.databases[databaseName] = loadedDB;
 
 	return true;
+}
+
+jDB.storedDB = function(databaseName) {
+	if (!supports_web_storage()) {
+		alert("Tu navegador no soporta Web Storage!");
+		return false;
+	}
+
+	databaseName = jDB.checkDBparam(databaseName);
+
+	return localStorage.getItem("jDB_"+databaseName) != null;
 }
 
 jDB.checkDBparam = function(db) {
