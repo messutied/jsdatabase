@@ -9,23 +9,33 @@
 		<script type="text/javascript">
 		jDB.createDB('dbTest');
 		jDB.selDB = 'dbTest';
-		jDB.createTable('usuarios', {cols: ['nombre', 'apellido'], rel: {oneToMany: 'telefonos'}});
-		jDB.createTable('telefonos', {cols: ['descr', 'numero'], rel: {manyToOne: 'usuarios'}});
 
-		var pepe = jDB.insert('usuarios', {nombre: 'Pepe', apellido: 'Duran'});
-		alert("Pepe inserted: "+pepe.nombre);
+//		if (jDB.storedDB()) jDB.loadDB();
+//		else {
+			
+			jDB.createTable('usuarios', {cols: ['nombre', 'apellido'], rel: {oneToMany: 'telefonos'}});
+			jDB.createTable('telefonos', {cols: ['descr', 'numero'], rel: {manyToOne: 'usuarios'}});
+
+			var pepe = jDB.insert('usuarios', {nombre: 'Pepe', apellido: 'Duran'});
+
+			jDB.insert('usuarios', {nombre: 'Juan', apellido: 'Duran'});
+
+			jDB.insert('telefonos', {descr: 'casa', numero: 213212, id_usuarios: 2});
+			jDB.insert('telefonos', {descr: 'trabajo', numero: 2112666, id_usuarios: 2});
+
+			var rows = jDB.select('usuarios').withID(2);
+			var pepe = rows.getRow(0);
+
+//			jDB.storeDB();
+//			alert("creating DB");
+//		}
+
 		
-		jDB.insert('usuarios', {nombre: 'Juan', apellido: 'Duran'});
+//		//pepe.apellido = "suarez";
+//		//pepe.Save();
+//
+//		jDB.storeDB();
 		
-		jDB.insert('telefonos', {descr: 'casa', numero: 213212, id_usuarios: 2});
-		jDB.insert('telefonos', {descr: 'trabajo', numero: 2112666, id_usuarios: 2});
-
-		var rows = jDB.select('usuarios').withID(2);
-		var pepe = rows.getRow(0);
-		//pepe.apellido = "suarez";
-		//pepe.Save();
-
-		jDB.storeDB();
 
 		</script>
 	</head>
