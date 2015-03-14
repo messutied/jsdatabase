@@ -1,4 +1,8 @@
+# jsDatabase
+
 La forma mas básica de base de datos para javascript guardada en un objeto JSON... guardar en local storage, etc
+
+![](https://raw.githubusercontent.com/messuti-edd/jsdatabase/master/img/splash.png)
 
 ## Uso básico
 
